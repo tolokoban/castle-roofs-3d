@@ -1,0 +1,24 @@
+<?php
+class TrailPassionMail {
+  function send( $to,
+                 $subject,
+                 $msg,
+                 $cc="",
+                 $bcc="",
+                 $from="Trail-Passion <contact@trail-passion.net>" ) {
+    $headers  = 'MIME-Version: 1.0' . "\r\n";
+    $headers .= 'Content-type: text/html; charset=utf-8' . "\r\n";
+    $headers .= "To: $to\r\n";
+    $headers .= "From: $from\r\n";
+    if ($cc != "") {
+      $headers .= "Cc: $cc\r\n";
+    }
+    if ($bcc != "") {
+      $headers .= "Bcc: $cc\r\n";
+    }
+    $msg = "<html><head><title>$subject</title></head>"
+       . "<body>$msg</body></html>";
+    return mail( $to, $subject, $msg, $headers );
+  }
+}
+?>

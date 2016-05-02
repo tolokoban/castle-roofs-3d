@@ -1,0 +1,56 @@
+<?php
+$ROLE = "";
+
+/**
+ * Exemple de paramètre reçu :
+ * ["XXXXX",111,[89,1366191500,78,1717,66,2,486,3]]
+ *
+ * [code, trace_id, [dossard, time, dossard, ecart, dossard, ecart, ...]]
+ *
+ * Retour :
+ *  -1 : Problème SQS.
+ *  -2 : Le code n'existe pas.
+ */
+function execService($input) {
+  global $DB;
+
+  $sql = "INSERT INTO " . $DB->table("timing")
+     . " (id, position, dossard, time) VALUES\n";
+  $code = $input[0];
+  $stm = $DB->query("SELECT id FROM " . $DB->table("race")
+                   . " WHERE code=?",
+                   $code);
+  if (!$stm) {
+    return -1;
+  }
+  $row = $stm->fetch();
+  if (!$row) {
+    return -2;
+  }
+  $id = $row[0];
+  $position = $input[1];
+  $pts = $input[2];
+  $last = 0;
+  for ($i = 0 ; $i < count($pts) ; $i += 2) {
+    $dossard = $pts[$i];
+    // Pour  compresser les  données, elles sont  envoyées sous  forme
+    // d'écarts  avec  le  précédent.   Il  faut  tout  recalculer  en
+    // absolu. Pour cela on utilise la variable $last.
+    $time = $last + $pts[$i + 1];
+    $last = $time;
+    if ($i > 0) {
+      $sql .= ",\n";
+    }
+    $sql .= "($id, $position, $dossard, $time)";
+    $output[] = $dossard;
+  }
+
+  $DB->query("DELETE FROM " . $DB->table("timing")
+             . " WHERE id=$id"
+             . " AND position=$position"
+             . " AND dossard IN (" . implode(",", $output) . ")");
+  $DB->query($sql);
+
+  return $sql;
+}
+?>

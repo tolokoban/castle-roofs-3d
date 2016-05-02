@@ -1,0 +1,339 @@
+<?php
+$ROLE = "USER";
+
+/**
+ * 1) Trace sans ID => INSERT.
+ * 2) Trace avec ID
+ *   2.1) Admin => UPDATE.
+ *   2.2) User
+ *     2.2.1) user.id == trace.usr => UPDATE.
+ *     2.2.2) user.id != trace.usr => INSERT.
+ *
+ * Argument :
+ * {
+ *   data: ..., // une trace au format JSON
+ *   tag: ...   // un tag à retourner avec le résultat.
+ * }
+ *
+ * Retour  :
+ * {
+ *   id: ...,  // identifiant de la trace.
+ *   tag: ..., // écho du tag passé en entrée.
+ *   err: ..., // code d'erreur.
+ * }
+ */
+function execService($arg) {
+  global $DB, $SYS;
+
+  $trace = $arg["data"];
+  $tag = 0;
+  if (isset($arg["tag"])) {
+    $tag = $arg["tag"];
+  }
+  echo "TRACE = ";
+  print_r($trace);
+  $summary = check($trace);
+  $summary["tag"] = $tag;
+  $askOfficial = false;
+  echo "SUMMARY = ";
+  print_r($summary);
+  //
+  if (array_key_exists("id", $trace)) {
+    echo "id = " . $trace["id"] . "\n";
+    // Cette trace existe déjà, il faut juste la sauvegarder,
+    // mais avant toute chose, on va vérifier qu'elle nous appartient.
+    $stm = $DB->query("SELECT user, official "
+                      . " FROM " . $DB->table("trace")
+                      . " WHERE id=?",
+                      $trace["id"]);
+    $row = $stm->fetch();
+    if (!hasRole("ADMIN")) {
+      echo "Ce n'est pas un ADMIN\n";
+      if (!$row) {
+        // C'est une trace sans ID.
+        echo "Trace non existante dans la base de données.\n";
+        if (array_key_exists("official", $trace)) {
+          if (intval($trace["official"]) == 1) {
+            $trace["official"] = 0;
+            $askOfficial = true;
+          }
+        }
+        $id = insert($trace, $summary);
+        if ($askOfficial == true) {
+          askOfficial($id["id"]);
+        }
+        return $id;
+      }
+      if ($_SESSION["USER"]["id"] != $row[0]) {
+        // C'est la trace de quelqu'un d'autre, alors on la duplique.
+        echo "Cette trace appartient à " . $row[0] . " et l'utilisateur courant est le " 
+          . $_SESSION["USER"]["id"] . ".\n";
+        $id = insert($trace, $summary);
+        return $id;
+      }
+      // On modifie cette trace car c'est la notre.
+      echo "Cette trace appartient à l'utilisateur courant : on la modifie.\n";
+      if (intval($row["official"]) == 0) {
+        if (array_key_exists("official", $trace)) {
+          if (intval($trace["official"]) == 1) {
+            $trace["official"] = 0;
+            $askOfficial = true;
+          }
+        }
+      }
+      $id = update($trace, $summary);
+      if ($askOfficial == true) {
+        askOfficial($id["id"]);
+      }
+      return $id;
+    } else {
+      echo "ADMIN\n";
+      // Cas de l'administrateur.
+      if (!$row) {
+        // Trace inexistante.
+        echo "Trace non existante dans la base de données.\n";
+        $id = insert($trace, $summary);
+      } else {
+        // Cette trace existe en base.
+        echo "Trace existante alors on la modifie.\n";
+        $id = update($trace, $summary);
+      }
+      return $id;
+    }
+  }
+  else {
+    echo "Cette trace n'a pas d'ID, alors c'est une création.\n";
+    return insert($trace, $summary);
+  }
+  return Array("err" => -1);
+}
+
+
+function askOfficial($id) {
+  $mail = new TP3Mail();
+  echo "Demande d'officialisation d'une trace envoyée par mail.<br/>\n";
+  return $mail->send("contact@trail-passion.net",
+              "Trace officielle / Official trace",
+              "<p>L'utilisateur <a href='mailto:"
+              . $_SESSION["USER"]["login"]
+              . "'><em>"
+              . $_SESSION["USER"]["name"]
+              . "</em></a> aimerait que sa "
+              . "<a href='http://www.trail-passion.net/?id="
+              . $id
+              . "'>trace</a> soit marquée comme officielle.</p><hr/>"
+              . "<p>User <a href='mailto:"
+              . $_SESSION["USER"]["login"]
+              . "'><em>"
+              . $_SESSION["USER"]["name"]
+              . "</em></a> would like the "
+              . "<a href='http://www.trail-passion.net/?id="
+              . $id
+              . "'>trace</a> to be marked as official.</p>",
+              $_SESSION["USER"]["login"]
+              );
+}
+
+
+/**
+ * Vérifie les champs de la trace.
+ */
+function check(&$trace) {
+  if (!array_key_exists("id", $trace)) {
+    $trace["id"] = 0;
+  }
+  if (!array_key_exists("lng", $trace)) {
+    echo "Il manque 'lng'!\n";
+    $trace["lng"] = $trace["lon"];
+    unset($trace["lon"]);
+  }
+  if (!array_key_exists("date", $trace) || strlen($trace["date"]) < 8) {
+    echo "Il manque 'date'!\n";
+    $trace["date"] = date("Ymdhis");
+  }
+  if (!array_key_exists("name", $trace)) {
+    echo "Il manque 'name'!\n";
+    $d = $trace["date"];
+    $yy = substr($d, 0, 4);
+    $mm = substr($d, 4, 2);
+    $dd = substr($d, 6, 2);
+    $trace["name"] = $dd . " / " . $mm . " / " . $yy;
+  }
+  if (!array_key_exists("type", $trace)) {
+    $trace["type"] = 0;
+  } else {
+    $trace["type"] = intval($trace["type"]);
+  }
+  if (!array_key_exists("grp", $trace)) {
+    $trace["grp"] = "";
+  }
+  if (!array_key_exists("url", $trace)) {
+    $trace["url"] = "";
+  }
+  if (!array_key_exists("public", $trace)) {
+    $trace["public"] = 0;
+  } else {
+    $trace["public"] = intval($trace["public"]);
+  }
+  if (!array_key_exists("official", $trace)) {
+    $trace["official"] = 0;
+  } else {
+    $trace["official"] = intval($trace["official"]);
+  }
+  if (!array_key_exists("km", $trace)) {
+    echo "Il manque 'km'!\n";
+    $dis = $trace["dis"];
+    $trace["km"] = (floatval($dis[count($dis) - 1]) - floatval($dis[0])) / 1000.0;
+  }
+  if (!array_key_exists("thr", $trace)) {
+    $trace["thr"] = 25;
+  }
+  if (!array_key_exists('asc', $trace)
+      || !array_key_exists('dsc', $trace)) {
+    echo "Il manque 'asc' ou 'dsc'!\n";
+    $alt = $trace["alt"][0];
+    $asc = 0;
+    $dsc = 0;
+    $threshold = floatval($trace["thr"]);
+    for ($i = 1 ; $i < count($trace["alt"]) ; $i++ ) {
+      $cur = $trace["alt"][$i];
+      $delta = $cur - $alt;
+      if ($delta > $threshold) {
+        $asc += $delta;
+        $alt = $cur;
+      }
+      else if ($delta < -$threshold) {
+        $dsc -= $delta;
+        $alt = $cur;
+      }
+    }
+    $trace['asc'] = $threshold * floor($asc / $threshold + 0.5);
+    $trace['dsc'] = $threshold * floor($dsc / $threshold + 0.5);
+  }
+
+  $summary = Array("lat" => floatval($trace["lat"][0]),
+                   "lng" => floatval($trace["lng"][0]));
+
+  return $summary;
+}
+
+
+function insert($trace, $summary) {
+  global $DB;
+
+  echo "[insert]\n";
+  unset($trace["id"]);
+  if (!array_key_exists("name", $trace)) {
+    $trace["name"] = "Anonymous";
+  }
+  $dur = 0;
+  if (array_key_exists("tim", $trace)) {
+    $tim = $trace["tim"];
+    $dur = intval($tim[count($tim) - 1]) - intval($tim[0]);
+  }
+  
+  $DB->query("INSERT INTO " . $DB->table("trace")
+             . "(user, type, name, `date`, latitude, longitude, "
+             . "`url`, `asc`, `dsc`, km, `group`,"
+             . "`public`, `official`, `dur`)"
+             . "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+             $_SESSION["USER"]["id"],
+             $trace["type"],
+             $trace["name"],
+             $trace["date"],
+             $summary["lat"],
+             $summary["lng"],
+             $trace['url'],
+             $trace['asc'],
+             $trace['dsc'],
+             $trace["km"],
+             $trace["grp"],
+             intval($trace["public"]),
+             intval($trace["official"]),
+             $dur);
+  $id = $DB->lastId();
+  $f = new File("pri", "trace");
+  $f->save($id, json_encode($trace));
+  // On envoie un mail pour notifier de cet ajout de trace.
+  $trace["id"] = $id;
+  $trace["lat"] = $summary["lat"];
+  $trace["lng"] = $summary["lng"];
+  if (isset($trace["alt"])) {
+    $trace["alt"] = "" . count($trace["alt"]) . " points";
+  }
+  if (isset($trace["dis"])) {
+    $trace["dis"] = "" . count($trace["dis"]) . " points";
+  }
+  if (isset($trace["acc"])) {
+    $trace["acc"] = "" . count($trace["acc"]) . " points";
+  }
+  if (isset($trace["tim"])) {
+    $tim = $trace["tim"];
+    $total = intval($tim[count($tim) - 1]) - intval($tim[0]);
+    $sec = $total % 60;
+    $total = intval(($total - $sec) / 60);
+    $min = $total % 60;
+    $hou = intval(($total - $min) / 60);
+    $trace["tim"] = "" . $hou . ":" . $min . ":" . $sec;
+  }
+  $detail = "<pre>" . json_encode($trace) . "</pre>";
+  $mail = new TP3Mail();
+  $mail->send("contact@trail-passion.net",
+              "Nouvelle trace ajoutée",
+              "<p>L'utilisateur <a href='mailto:"
+              . $_SESSION["USER"]["login"]
+              . "'>"
+              . $_SESSION["USER"]["login"]
+              . "</a> vient de créer une nouvelle "
+              . "<a href='http://www.trail-passion.net/?id="
+              . $id
+              . "'>trace</a>.</p>"
+              . $detail);
+  return Array("id" => $id, "tag" => $summary["tag"]);
+}
+
+
+function update($trace, $summary) {
+  global $DB;
+
+  echo "[update]\n";
+  $dur = 0;
+  if (array_key_exists("tim", $trace)) {
+    $tim = $trace["tim"];
+    $dur = intval($tim[count($tim) - 1]) - intval($tim[0]);
+  }
+
+  $DB->query("UPDATE " . $DB->table("trace")
+             . " SET name=?,"
+             . " type=?,"
+             . " latitude=?,"
+             . " longitude=?,"
+             . " `url`=?,"
+             . " `asc`=?,"
+             . " `dsc`=?,"
+             . " `km`=?,"
+             . " `group`=?,"
+             . " `public`=?,"
+             . " `official`=?,"
+             . " `date`=?,"
+             . " dur=?"
+             . " WHERE id=?",
+             $trace["name"],
+             $trace["type"],
+             $summary["lat"],
+             $summary["lng"],
+             $trace['url'],
+             $trace['asc'],
+             $trace['dsc'],
+             $trace["km"],
+             $trace["grp"],
+             intval($trace["public"]),
+             intval($trace["official"]),
+             $trace["date"],
+             $dur,
+             $trace["id"]);
+  $f = new File("pri", "trace");
+  $f->save($trace["id"], json_encode($trace));
+  return Array("id" => $trace["id"], "tag" => $summary["tag"]);
+}
+?>

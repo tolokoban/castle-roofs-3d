@@ -1,0 +1,37 @@
+<?php
+$ROLE = "";
+
+/**
+ * 
+ */
+function execService($arg) {
+  global $DB, $SYS;
+  
+  $id = $arg;
+  $stm = $BD->query("SELECT dossard, position, `time` "
+                    . "FROM " . $DB->table("timing")
+                    . " WHERE id=?"
+                    . " ORDER BY position DESC , `time`",
+                    $id);
+  $data = Array();
+  $lastDossard = -1;
+  $lastTime = 0;
+  while ($row = $DB->fetch()) {
+    $dossard = $row[0];
+    $pos = $row[1];
+    $time = $row[2];
+    if ($dossard != $lastDossard) {
+      $lastDossard = $dossard;
+      $lastTime = $time;
+      $points = Array($time, $pos);
+      $data[] = $dossard;
+      $data[] = &$points;
+    } else {
+      $points[] = $lastTime - $time;
+      $points[] = $dossard;
+    }
+  }
+  return Array("data" => $data);
+}
+
+?>
