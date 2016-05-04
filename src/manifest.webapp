@@ -1,0 +1,14 @@
+{
+  "launch_path": "/index.html",
+  "developer": {
+    "name": "tolokoban",
+    "url": "https://github.com/tolokoban/castle-roofs-3d"
+  },
+  "icons": {
+    "128": "/icon-128.png",
+    "512": "/icon-512.png"
+  },
+  "name": "castle-roofs-3d",
+  "version": "0.0.1",
+  "description": "Tutorial: making a simple 3D game"
+}
