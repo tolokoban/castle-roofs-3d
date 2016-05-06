@@ -43,6 +43,7 @@ exports.count = function() {
 exports.getCopyOfCastle = function( index ) {
     var castle = CASTLES[index];
     if( !castle ) return castle;
-    return JSON.parse( JSON.stringify( castle ) );
+    var out = JSON.parse( JSON.stringify( castle ) );
+    return out;
 };
 

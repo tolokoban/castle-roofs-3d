@@ -1,6 +1,7 @@
 <x-css>style.css</x-css>
 <x-html title='Catle Roofs 3D'>
     <x-md>
+
 # How to create a simple game with WebGL?
 
 In this tutorial, we will create a simple 3D game that runs in a browser. The player will never enter the castel, he will just run on the roofs of it. Moreover, the castle design is very simple: only boxes of same base and different heights. The player can jump from a box to the adjacent one if the height difference is small egnough. The castle is on an island in the middle of the sea. Finally, player, objects and monsters will be flat 2D drawings always facing the camera.
@@ -43,6 +44,26 @@ So, stop talking and let's start painting a box.
 <x-widget name="step001" $width="160" $height="160" $size="1"/>
 <x-widget name="step001" $width="160" $height="160" $size="5"/>
 <x-widget name="step001" $width="160" $height="160" $size="9"/>
+
+First, we have to initialise the WebGL context. We need a DIV that will own our animation: `<div id="ANIM"></div>`. And this code will do the job:
+
+<x-code>
+// Defining the view size: 640x480.
+var W = 640;
+var H = 480;
+// Creating a Camera to view the scene.
+var camera = new THREE.PerspectiveCamera( 45, W/H, 0.1, 1000 );
+// Creating a Scene to own 3D Objects.
+var scene = new THREE.Scene();
+// Creating a Renderer to draw the scene.    
+var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor( 0xffffff, 0 );  // Background is white.
+renderer.setSize( W, H );
+// Retrieve container.
+var div = document.getElementById( 'ANIM' );
+div.appendChild( renderer.domElement );
+</x-code>
+
 
 
 [Next step](step002.html)

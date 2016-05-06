@@ -1,1 +1,26 @@
 /* General StyleSheet */
+
+html {
+    width: 100%;
+    height: 100%;
+    background: #aaa;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+body {
+    position: absolute;
+    width: 800px;
+    padding: 1rem;
+    background: #eee;
+    left: 50%;
+    margin: 1rem -400px;
+    box-shadow: 0 0 1px 1px #000;
+}
+
+h1, h2, h3 {
+    font-variant: small-caps;
+    color: #063;
+    border-bottom: 1px solid #063;
+    font-weight: 300;
+}
