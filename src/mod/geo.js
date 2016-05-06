@@ -11,7 +11,7 @@ var Geo = function() {
     this._uvs = {};    
 };
 
-// Extension of Widget.
+// Extension of THREE.Geometry.
 Geo.prototype = Object.create(THREE.Geometry.prototype);
 Geo.prototype.constructor = Geo;
 
