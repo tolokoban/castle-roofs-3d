@@ -19,6 +19,8 @@ function Object3D( material ) {
 }
 
 
+
+
 /**
  * @param args
  * * __vertices__:
