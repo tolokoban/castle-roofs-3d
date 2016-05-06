@@ -1,0 +1,41 @@
+{
+    "name": "castle-roofs-3d",
+    "author": "tolokoban",
+    "description": "Tutorial: making a simple 3D game",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/tolokoban/castle-roofs-3d.git"
+    },
+    "homepage": "https://github.com/tolokoban/castle-roofs-3d",
+    "license": "GPL-3.0",
+    "scripts": {
+        "test": "node node_modules/karma/bin/karma start karma.conf.js",
+        "test:dbg": "node --debug-brk node_modules/karma/bin/karma start karma.conf.js",
+        "debug": "node node_modules/toloframework/bin/tfw.js build dev test php watch",
+        "clean": "node node_modules/toloframework/bin/tfw.js clean",
+        "release": "node node_modules/toloframework/bin/tfw.js build version php clean"
+    },
+    "bugs": {
+        "url": "https://github.com/tolokoban/castle-roofs-3d/issues"
+    },
+    "tfw": {
+        "modules": [],
+        "compile": {
+            "type": "firefoxos",
+            "files": [
+                "\\.html$"
+            ]
+        },
+        "output": "www"
+    },
+    "version": "0.0.2",
+    "reservedModules": [],
+    "dependencies": {
+        "jasmine-core": "^2.4.1",
+        "karma": "^0.13.22",
+        "karma-chrome-launcher": "^0.2.3",
+        "karma-firefox-launcher": "^0.1.7",
+        "karma-jasmine": "^0.3.8",
+        "toloframework": "^0.34.13"
+    }
+}
