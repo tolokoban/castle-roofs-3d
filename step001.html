@@ -1,0 +1,55 @@
+<!DOCTYPE html><html><head><title>Catle Roofs 3D</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><script src="js/@step001.js"></script><link rel="stylesheet" type="text/css" href="css/three.canvas.css"><script src="js/$.js"></script><script src="js/x-widget.js"></script><script src="js/step001.js"></script><script src="js/three.canvas.js"></script><link rel="stylesheet" type="text/css" href="css/@step001.css"></head><body>
+    <h1 id="how-to-create-a-simple-game-with-webgl-">How to create a simple game with WebGL?</h1>
+<p>In this tutorial, we will create a simple 3D game that runs in a browser. The player will never enter the castel, he will just run on the roofs of it. Moreover, the castle design is very simple: only boxes of same base and different heights. The player can jump from a box to the adjacent one if the height difference is small egnough. The castle is on an island in the middle of the sea. Finally, player, objects and monsters will be flat 2D drawings always facing the camera.</p>
+<p>Not an impressive game, you thought. But it will be quite egnough to start learning principles of WebGL, having a bit of fun.</p>
+<h2 id="defining-a-castle">Defining a castle</h2>
+<p>Here is an example of <strong>Castle Merry</strong>:</p>
+<pre class="custom highlight js">var castelMerry <span class="operator">=</span> {
+    rows: 5,
+    heights: [
+        3, 3, 3, 3, 3,
+        3, 1, 4, 1, 3,
+        3, 1, 5, 1, 3,
+        3, 1, 6, 1, 3,
+        4, 3, 2, 3, 4,
+    ]
+};</pre>
+
+<p>It is made of 25 boxes with differents heights. For a basic start, we will represent each box with a green top and maroon sides. We will not create a bottom face because it will never be visible.</p>
+<p>To simplify all the setup mess of WebGL, we use <a href="http://threejs.org/">threejs</a> in version <strong>r76</strong>. This is an heavy library (about half a megabyte zipped) and we don&#39;t need everything it provides. But for a tutorial, it is usefull because it hides a lot of technical stuff.</p>
+<fieldset><legend>If you are using Toloframework</legend>
+Assuming your main module is <code>app.js</code>, just put the <code>three.min.js</code> file in the same folder and create the file <code>app.dep</code> with this content: 
+
+<pre class="custom highlight js">{
+  <span class="string">&quot;js&quot;</span>: <span class="string">&quot;three.min.js&quot;</span>
+}</pre>
+</fieldset>
+
+<p>So, stop talking and let&#39;s start painting a box.</p>
+<div id="step0010" style="display:none"></div>
+<div id="step0011" style="display:none"></div>
+<div id="step0012" style="display:none"></div>
+<div id="step0013" style="display:none"></div>
+
+<p>First, we have to initialise the WebGL context. We need a DIV that will own our animation: <code>&lt;div id=&quot;ANIM&quot;&gt;&lt;/div&gt;</code>. And this code will do the job:</p>
+<pre class="custom highlight js"><span class="comment">// Defining the view size: 640x480.
+</span>var W <span class="operator">=</span> 640;
+<span class="keyword">
+var</span> H <span class="operator">=</span> 480;
+<span class="comment">// Creating a Camera to view the scene.
+</span>var camera <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">PerspectiveCamera</span>( 45, W<span class="operator">/</span>H, 0.1, 1000 );
+<span class="comment">// Creating a Scene to own 3D Objects.
+</span>var scene <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Scene</span>();
+<span class="comment">// Creating a Renderer to draw the scene.    
+</span>var renderer <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">WebGLRenderer</span>();
+renderer.<span class="function">setClearColor</span>( 0xffffff, 0 );  <span class="comment">// Background is white.
+</span>renderer.<span class="function">setSize</span>( W, H );
+<span class="comment">// Retrieve container.
+</span>var div <span class="operator">=</span> document.<span class="function">getElementById</span>( 'ANIM' );
+div.<span class="function">appendChild</span>( renderer.domElement );</pre>
+
+
+
+<p><a href="step002.html">Next step</a></p>
+
+</body></html>

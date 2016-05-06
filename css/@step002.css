@@ -1,0 +1,20 @@
+/* General StyleSheet */
+
+html {
+    width: 100%;
+    height: 100%;
+    background: #aaa;
+    padding: 0;
+}
+
+body {
+    position: absolute;
+    margin: 0;
+    width: 800px;
+    padding: 1rem;
+    background: #eee;
+    left: 50%;
+    margin-left: -400px;
+    box-shadow: 0 0 1px 1px #000;
+}
+

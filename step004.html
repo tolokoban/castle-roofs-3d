@@ -1,0 +1,50 @@
+<!DOCTYPE html><html><head><title>Catle Roofs 3D</title><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><script src="js/@step004.js"></script><link rel="stylesheet" type="text/css" href="css/three.canvas.css"><script src="js/$.js"></script><script src="js/x-widget.js"></script><script src="js/step004.js"></script><script src="js/three.canvas.js"></script><script src="js/mesh-factory.js"></script><script src="js/castles.js"></script><script src="js/lights.js"></script><script src="js/gfx.js"></script><link rel="stylesheet" type="text/css" href="css/@step004.css"></head><body>
+    <h2 id="applying-texture-to-the-walls">Applying texture to the walls</h2>
+<p><img src="css/gfx/wall.jpg"/>
+<img src="css/gfx/wall-bump.jpg"/></p>
+<div id="step00414" style="display:none"></div>
+<div id="step00415" style="display:none"></div>
+
+<pre class="custom highlight js">var texWall <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">TextureLoader</span>().<span class="function">load</span>( <span class="string">"css/gfx/wall.jpg"</span> );
+<span class="keyword">
+var</span> texWallBump <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">TextureLoader</span>().<span class="function">load</span>( <span class="string">"css/gfx/wall-bump.jpg"</span> );
+<span class="keyword">
+var</span> material <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">MeshStandardMaterial</span>({
+    metalness: 0,
+    roughness: 0.7,
+    map: texWall,
+    bumpMap: texWallBump
+});
+<span class="keyword">
+var</span> geometry <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Geometry</span>();
+
+geometry.vertices.<span class="function">push</span>(
+   <span class="keyword"> new</span> THREE.<span class="function">Vector3</span>(  1, 0,  1 ),
+   <span class="keyword"> new</span> THREE.<span class="function">Vector3</span>( <span class="operator">-</span>1, 0,  1 ),
+   <span class="keyword"> new</span> THREE.<span class="function">Vector3</span>( <span class="operator">-</span>1, 0, <span class="operator">-</span>1 ),
+   <span class="keyword"> new</span> THREE.<span class="function">Vector3</span>(  1, 0, <span class="operator">-</span>1 )
+);
+geometry.faces.<span class="function">push</span>(
+   <span class="keyword"> new</span> THREE.<span class="function">Face3</span>( 0, 3, 2 ),
+   <span class="keyword"> new</span> THREE.<span class="function">Face3</span>( 0, 2, 1 )
+);
+<span class="keyword">
+var</span> uv0 <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Vector2</span>( 1, 1 );
+<span class="keyword">
+var</span> uv1 <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Vector2</span>( 0, 1 );
+<span class="keyword">
+var</span> uv2 <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Vector2</span>( 0, 0 );
+<span class="keyword">
+var</span> uv3 <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Vector2</span>( 1, 0 );
+geometry.faceVertexUvs[0] <span class="operator">=</span> [
+    [uv0, uv3, uv2],
+    [uv0, uv2, uv1]
+];
+
+geometry.<span class="function">computeFaceNormals</span>();
+geometry.<span class="function">computeVertexNormals</span>();
+scene.<span class="function">add</span>(<span class="keyword"> new</span> THREE.<span class="function">Mesh</span>( geometry, material ) );</pre>
+
+<p><a href="step005.html">Next step</a></p>
+
+</body></html>
