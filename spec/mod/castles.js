@@ -1,0 +1,2 @@
+require("castles",function(t,r){var e={cols:5,rows:5,heights:[3,3,3,3,3,3,1,4,1,3,3,1,5,1,3,3,1,6,1,3,4,3,2,3,4]},n={cols:7,rows:7,heights:[4,3,3,3,3,3,4,3,0,0,0,0,0,3,3,0,5,5,5,0,3,3,0,5,4,5,0,3,3,0,5,5,5,0,3,3,0,0,0,0,0,3,4,3,3,3,3,3,4]},s=[e,n];t.count=function(){return s.length},t.getCopyOfCastle=function(t){var r=s[t];return r?JSON.parse(JSON.stringify(r)):r}});
+//# sourceMappingURL=castles.js.map

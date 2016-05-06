@@ -1,0 +1,50 @@
+<x-css>style.css</x-css>
+<x-html title='Catle Roofs 3D'>
+    <x-md>
+# How to create a simple game with WebGL?
+
+In this tutorial, we will create a simple 3D game that runs in a browser. The player will never enter the castel, he will just run on the roofs of it. Moreover, the castle design is very simple: only boxes of same base and different heights. The player can jump from a box to the adjacent one if the height difference is small egnough. The castle is on an island in the middle of the sea. Finally, player, objects and monsters will be flat 2D drawings always facing the camera.
+
+Not an impressive game, you thought. But it will be quite egnough to start learning principles of WebGL, having a bit of fun.
+
+## Defining a castle
+
+Here is an example of __Castle Merry__:
+<x-code>
+var castelMerry = {
+    rows: 5,
+    heights: [
+        3, 3, 3, 3, 3,
+        3, 1, 4, 1, 3,
+        3, 1, 5, 1, 3,
+        3, 1, 6, 1, 3,
+        4, 3, 2, 3, 4,
+    ]
+};
+</x-code>
+
+It is made of 25 boxes with differents heights. For a basic start, we will represent each box with a green top and maroon sides. We will not create a bottom face because it will never be visible.
+
+To simplify all the setup mess of WebGL, we use [threejs](http://threejs.org/) in version __r76__. This is an heavy library (about half a megabyte zipped) and we don't need everything it provides. But for a tutorial, it is usefull because it hides a lot of technical stuff.
+
+<if-tfw>
+Assuming your main module is `app.js`, just put the `three.min.js` file in the same folder and create the file `app.dep` with this content: 
+
+<x-code>
+{
+  "js": "three.min.js"
+}
+</x-code>
+</if-tfw>
+
+So, stop talking and let's start painting a box.
+
+<x-widget name="step001" $width="160" $height="160" $size="3"/>
+<x-widget name="step001" $width="160" $height="160" $size="1"/>
+<x-widget name="step001" $width="160" $height="160" $size="5"/>
+<x-widget name="step001" $width="160" $height="160" $size="9"/>
+
+
+[Next step](step002.html)
+    </x-md>
+</x-html>
