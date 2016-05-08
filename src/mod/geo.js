@@ -35,7 +35,7 @@ Geo.prototype.createMesh = function( material ) {
 Geo.prototype.addQuad = function( args ) {
     if( typeof args.uvs === 'undefined' ) {
         args.uvs = [
-            [0, 0], [1, 0], [1, 1], [0, 1]
+            [1, 0], [0, 0], [0, 1], [1, 1]
         ];
     }
 
@@ -61,9 +61,41 @@ Geo.prototype.addQuad = function( args ) {
     }
     this.faceVertexUvs[0].push(
         [uvs[0], uvs[3], uvs[2]],
-        [uvs[0], uvs[1], uvs[2]]
+        [uvs[0], uvs[2], uvs[1]]
     );
     this.faces.push( f1, f2 );    
+};
+
+
+Geo.prototype.addTri = function( args ) {
+    if( typeof args.uvs === 'undefined' ) {
+        args.uvs = [
+            [1, 0], [0, 1], [1, 1]
+        ];
+    }
+
+    var uvs = [];
+    args.uvs.forEach(function ( uv ) {
+        uvs.push( addUV.call( this, uv[0], uv[1] ) );
+    }, this);
+
+    var vertices = [];
+    args.vertices.forEach(function ( vertex ) {
+        vertices.push( addVertex.call( this, vertex[0], vertex[1], vertex[2] ) );
+    }, this);
+
+    var f1 = new THREE.Face3( vertices[0], vertices[1], vertices[2] );
+
+    if( args.color ) {
+        f1.vertexColors[0] = f1.vertexColors[1] = f1.vertexColors[2] = args.color;
+    }
+    if( typeof args.materialIndex === 'number') {
+        f1.materialIndex = args.materialIndex;
+    }
+    this.faceVertexUvs[0].push(
+        [uvs[0], uvs[1], uvs[2]]
+    );
+    this.faces.push( f1 );    
 };
 
 

@@ -1,2 +1,2 @@
-require("lights",function(i,t){i["default"]=function(i){var t=new THREE.HemisphereLight(13430527,10066295,.1),e=new THREE.DirectionalLight(7829367,2.5),n=new THREE.DirectionalLight(7829401,1),o=new THREE.DirectionalLight(8943513,1);return e.position.set(230,2,150),n.position.set(-200,1,100),o.position.set(-2,100,1),i.add(e),i.add(n),i.add(o),i.add(t),i}});
+require("lights",function(i,t){i["default"]=function(i){var t=new THREE.HemisphereLight(13430527,10066295,.1),e=new THREE.DirectionalLight(7829367,2.5),n=new THREE.DirectionalLight(7829367,1),o=new THREE.DirectionalLight(8947848,1);return e.position.set(230,2,150),n.position.set(-200,1,100),o.position.set(-2,100,1),i.add(e),i.add(n),i.add(o),i.add(t),i}});
 //# sourceMappingURL=lights.js.map
