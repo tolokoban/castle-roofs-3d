@@ -1,0 +1,323 @@
+<?php
+$ROLE = "USER";
+
+/**
+ * Si la trace est "official" ou si l'appel a été fait par un administrateur,
+ * il faut regénérer la liste des trails.
+ *
+ * Argument :
+ *   * Une trace au format JSON
+ *
+ * Retour  :
+ *  * En  cas  de succès,  un  nombre  strictement positif  qui
+ *    correspond à l'id de la trace dans la base de données.
+ *  *
+ *
+ */
+function execService($trace) {
+  global $DB, $SYS;
+
+  echo "TRACE = ";
+  print_r($trace);
+  $summary = check($trace);
+  echo "SUMMARY = ";
+  print_r($summary);
+  echo "id = " . $trace["id"] . "\n";
+  //
+  if (array_key_exists("id", $trace)) {
+    // Cette trace existe déjà, il faut juste la sauvegarder,
+    // mais avant toute chose, on va vérifier qu'elle nous appartient.
+    $stm = $DB->query("SELECT user"
+                      . " FROM " . $DB->table("trace")
+                      . " WHERE id=?",
+                      $trace["id"]);
+    $row = $stm->fetch();
+    if (!hasRole("ADMIN")) {
+      echo "Ce n'est pas un ADMIN\n";
+      if (!$row) {
+        // C'est une trace sans ID.
+        return insert($trace, $summary);
+      }
+      if ($_SESSION["USER"]["id"] != $row[0]) {
+        // C'est la trace de quelqu'un d'autre, alors on la duplique.
+        $id = insert($trace, $summary);
+        return $id;
+      }
+      // On modifie cette trace car c'est la notre.
+      $id = update($trace, $summary);
+      if ($trace["official"] == 1) {
+        buildTracesList();
+      }
+      return $id;
+    } else {
+      echo "ADMIN\n";
+      // Cas de l'administrateur.
+      if (!$row) {
+        // Trace inexistante.
+        $id = insert($trace, $summary);
+      } else {
+        // Cette trace existe en base.
+        $id = update($trace, $summary);
+      }
+      buildTracesList();
+      return $id;
+    }
+  }
+  else {
+    return insert($trace, $summary);
+  }
+  return -1;
+}
+
+
+/**
+ * Vérifie les champs de la trace.
+ */
+function check(&$trace) {
+  if (!array_key_exists("id", $trace)) {
+    $trace["id"] = 0;
+  }
+  if (!array_key_exists("lng", $trace)) {
+    echo "Il manque 'lng'!\n";
+    $trace["lng"] = $trace["lon"];
+    unset($trace["lon"]);
+  }
+  if (!array_key_exists("date", $trace) || strlen($trace["date"]) < 8) {
+    echo "Il manque 'date'!\n";
+    $trace["date"] = date("Ymdhis");
+  }
+  if (!array_key_exists("name", $trace)) {
+    echo "Il manque 'name'!\n";
+    $d = $trace["date"];
+    $yy = substr($d, 0, 4);
+    $mm = substr($d, 4, 2);
+    $dd = substr($d, 6, 2);
+    $trace["name"] = $dd . " / " . $mm . " / " . $yy;
+  }
+  if (!array_key_exists("type", $trace)) {
+    $trace["type"] = 0;
+  } else {
+    $trace["type"] = intVal($trace["type"]);
+  }
+  if (!array_key_exists("grp", $trace)) {
+    $trace["grp"] = "";
+  }
+  if (!array_key_exists("url", $trace)) {
+    $trace["url"] = "";
+  }
+  if (!array_key_exists("public", $trace)) {
+    $trace["public"] = 0;
+  } else {
+    $trace["public"] = intval($trace["public"]);
+  }
+  if (!array_key_exists("official", $trace)) {
+    $trace["official"] = 0;
+  } else {
+    $trace["official"] = intval($trace["official"]);
+  }
+  if (!array_key_exists("km", $trace)) {
+    echo "Il manque 'km'!\n";
+    $dis = $trace["dis"];
+    $trace["km"] = (floatval($dis[count($dis) - 1]) - floatval($dis[0])) / 1000.0;
+  }
+  if (!array_key_exists('asc', $trace)
+      || !array_key_exists('dsc', $trace)) {
+    echo "Il manque 'asc' ou 'dsc'!\n";
+    $alt = $trace["alt"][0];
+    $asc = 0;
+    $dsc = 0;
+    $threshold = 25;
+    for ($i = 1 ; $i < count($trace["alt"]) ; $i++ ) {
+      $cur = $trace["alt"][$i];
+      $delta = $cur - $alt;
+      if ($delta > $threshold) {
+        $asc += $delta;
+        $alt = $cur;
+      }
+      else if ($delta < -$threshold) {
+        $dsc -= $delta;
+        $alt = $cur;
+      }
+    }
+    $trace['asc'] = $threshold * floor($asc / $threshold + 0.5);
+    $trace['dsc'] = $threshold * floor($dsc / $threshold + 0.5);
+  }
+
+  $summary = Array("lat" => $trace["lat"][0],
+                   "lng" => $trace["lng"][0]);
+
+  return $summary;
+}
+
+
+function insert($trace, $summary) {
+  global $DB;
+
+  echo "[insert]\n";
+  unset($trace["id"]);
+  if (!array_key_exists("name", $trace)) {
+    $trace["name"] = "Anonymous";
+  }
+  $DB->query("INSERT INTO " . $DB->table("trace")
+             . "(user, type, name, date, latitude, longitude, "
+             . "`url`, `asc`, `dsc`, km, `group`,"
+             . "`public`, `official`)"
+             . "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+             $_SESSION["USER"]["id"],
+             $trace["type"],
+             $trace["name"],
+             $trace["date"],
+             $summary["lat"],
+             $summary["lng"],
+             $trace['url'],
+             $trace['asc'],
+             $trace['dsc'],
+             $trace["km"],
+             $trace["grp"],
+             intval($trace["public"]),
+             intval($trace["official"]));
+  $id = $DB->lastId();
+  $f = new File("pri", "trace");
+  $f->save($id, json_encode($trace));
+  // On envoie un mail pour notifier de cet ajout de trace.
+  $trace["id"] = $id;
+  $trace["lat"] = $summary["lat"];
+  $trace["lng"] = $summary["lng"];
+  if (isset($trace["alt"])) {
+    $trace["alt"] = "" . count($trace["alt"]) . " points";
+  }
+  if (isset($trace["dis"])) {
+    $trace["dis"] = "" . count($trace["dis"]) . " points";
+  }
+  if (isset($trace["acc"])) {
+    $trace["acc"] = "" . count($trace["acc"]) . " points";
+  }
+  if (isset($trace["tim"])) {
+    $tim = $trace["tim"];
+    $total = intVal($tim[count($tim) - 1]) - intVal($tim[0]);
+    $sec = $total % 60;
+    $total = intVal(($total - $sec) / 60);
+    $min = $total % 60;
+    $hou = intVal(($total - $min) / 60);
+    $trace["tim"] = "" . $hou . ":" . $min . ":" . $sec;
+  }
+  $detail = "<pre>" . json_encode($trace) . "</pre>";
+  $mail = new TrailPassionMail();
+error_log("Mail...");
+  $mail->send("contact@trail-passion.net",
+              "Nouvelle trace ajoutée",
+              "<p>L'utilisateur <a href='mailto:"
+              . $_SESSION["USER"]["login"]
+              . "'>"
+              . $_SESSION["USER"]["login"]
+              . "</a> vient de créer une nouvelle "
+              . "<a href='http://www.trail-passion.net/?id="
+              . $id
+              . "'>trace</a>.</p>"
+              . $detail);
+error_log("Mail sent.");
+  return $id;
+}
+
+
+function update($trace, $summary) {
+  global $DB;
+
+  echo "[update]\n";
+  $DB->query("UPDATE " . $DB->table("trace")
+             . " SET name=?,"
+             . " type=?,"
+             . " latitude=?,"
+             . " longitude=?,"
+             . " `url`=?,"
+             . " `asc`=?,"
+             . " `dsc`=?,"
+             . " `km`=?,"
+             . " `group`=?,"
+             . " `public`=?,"
+             . " `official`=?"
+             . " WHERE id=?",
+             $trace["name"],
+             $trace["type"],
+             $summary["lat"],
+             $summary["lng"],
+             $trace['url'],
+             $trace['asc'],
+             $trace['dsc'],
+             $trace["km"],
+             $trace["grp"],
+             intVal($trace["public"]),
+             intVal($trace["official"]),
+             $trace["id"]);
+  $f = new File("pri", "trace");
+  $f->save($trace["id"], json_encode($trace));
+  return $trace["id"];
+}
+
+
+function buildTracesList() {
+  global $DB;
+
+  $sql = "SELECT id, type, `group`, name, `url`, km, `asc`, `dsc`, latitude, longitude "
+         . "FROM `tfw_trace` "
+         . "WHERE official=1 "
+         . "ORDER BY type, `group`, name";
+  $stm = $DB->query($sql);
+  $fd = null;
+  $type = "";
+  $data = Array();
+  $groups = Array();
+  echo "[buildTracesList]\n";
+  while( $row = $stm->fetch() ) {
+    $groups[] = $row["group"];
+    echo $row["id"] . " : " . $row["group"] . " / " . $row["name"] . "\n";
+    if ($row["type"] != $type) {
+      // Nouveau type => nouveau fichier.
+      if ($fd != null) {
+        fwrite($fd, json_encode($data));
+        fclose($fd);
+      }
+      $type = $row["type"];
+      $fd = fopen("./src/trailpassion/trace/trace" . $type . ".json", "w");
+    }
+    if (!isset($data[$row["group"]])) {
+      $data[$row["group"]] = Array();
+    }
+    $data[$row["group"]][] =
+       Array("I" => intval($row["id"]),
+             "N" => $row["name"],
+             "U" => $row["url"],
+             "K" => floatval($row["km"]),
+             "A" => floatval($row["asc"]),
+             "D" => floatval($row["dsc"]),
+             "Y" => floatval($row["latitude"]),
+             "X" => floatval($row["longitude"]));
+  };
+  /*
+  // Faire le "sitemap.html".
+  $fd = fopen("../sitemap.html", "w");
+  fwrite($fd, '<!DOCTYPE html><html><head>');
+  fwrite($fd, '<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>\n');
+  fwrite($fd, '<meta name="keywords" content="');
+  fwrite($fd, implode(", ", $groups));
+  fwrite($fd, '"/>');
+  fwrite($fd, '<title>Trail-Passion</title></head>');
+  fwrite($fd, '<body>\n<ul>');
+  foreach ($data as $grp => $items) {
+    fwrite($fd, "<li>$grp<ul>");
+    foreach ($items as $item) {
+      fwrite($fd, '  <li><a href="' . $item["U"] . '">' . $item["N"] . '</a></li>');
+    }
+    fwrite($fd, "</ul></li>");
+  }
+  fwrite($fd, '</ul></body></html>');
+  fclose($fd);
+  */
+  unset($data["U"]);
+  if ($fd != null) {
+    fwrite($fd, json_encode($data));
+    fclose($fd);
+  }
+  return 1;
+}
+?>

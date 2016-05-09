@@ -1,0 +1,33 @@
+<?php
+$ROLE = "ADMIN";
+
+/**
+ * 
+ */
+function execService($input) {
+  global $DB, $SYS;
+  
+  $data = Array();
+
+
+  return $data;
+}
+
+function nb($table, $where="") {
+  $sql = "SELECT count(*) "
+    . "FROM " . $DB->table($table);
+  if ($where != "") {
+    $sql .= " WHERE " . $where;
+  }
+  $stm = $DB->query($sql);
+  if (!$stm) {
+    return -1;
+  }
+  $row = $stm->fetch();
+  if (!row) {
+    return -2;
+  }
+  return intval($row[0]);
+}
+
+?>

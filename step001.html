@@ -37,15 +37,16 @@ Assuming your main module is <code>app.js</code>, just put the <code>three.min.j
 <span class="keyword">
 var</span> H <span class="operator">=</span> 480;
 <span class="comment">// Creating a Camera to view the scene.
-</span>var camera <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">PerspectiveCamera</span>( 45, W<span class="operator">/</span>H, 0.1, 1000 );
-<span class="comment">// Creating a Scene to own 3D Objects.
-</span>var scene <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">Scene</span>();
-<span class="comment">// Creating a Renderer to draw the scene.    
-</span>var renderer <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">WebGLRenderer</span>();
-renderer.<span class="function">setClearColor</span>( 0xffffff, 0 );  <span class="comment">// Background is white.
-</span>renderer.<span class="function">setSize</span>( W, H );
-<span class="comment">// Retrieve container.
-</span>var div <span class="operator">=</span> document.<span class="function">getElementById</span>( 'ANIM' );
+</span>var camera <span class="operator">=</span><span class="keyword"> new</span> THREE.<span class="function">PerspectiveCamera</span>( 45, W<span class="regexp">/H, 0.1, 1000 );
+/</span><span class="regexp">/ Creating a Scene to own 3D Objects.
+var scene = new THREE.Scene();
+/</span><span class="regexp">/ Creating a Renderer to draw the scene.    
+var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor( 0xffffff, 0 );  /</span><span class="regexp">/ Background is white.
+renderer.setSize( W, H );
+/</span><span class="operator">/</span> Retrieve container.
+<span class="keyword">
+var</span> div <span class="operator">=</span> document.<span class="function">getElementById</span>( 'ANIM' );
 div.<span class="function">appendChild</span>( renderer.domElement );</pre>
 
 

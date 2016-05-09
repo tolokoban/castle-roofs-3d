@@ -1,0 +1,90 @@
+<?php
+$ROLE = "";
+
+/**
+ * Retourner la liste des traces de type "private", "official" ou "public".
+ * Les arguments d'entrée sont :
+ *  - modes : une des 3 chaînes suivante "private", "official" ou "public", ou une liste contenant ces chaînes.
+ *
+ * Exemple de retour :
+ * {
+ *   "official": {
+ *     "UTMB": [
+ *       {"#":"20120830", "N": "UTMB 2012", ...},
+ *       ...
+ *     ],
+ *     ...
+ *   },
+ *   "public": ...
+ * }
+ */
+function execService($input) {
+  global $DB;
+
+  $modes = $input["modes"];
+  if (!is_array($modes)) {
+    $modes = Array($modes);
+  }
+  $user = 0;
+  if (isset($_SESSION["USER"]) && isset($_SESSION["USER"]["id"])) {
+    $user = 0 + intVal($_SESSION["USER"]["id"]);
+  }
+  $result = Array();
+  foreach ($modes as $mode) {
+    if ($mode == 'public') {
+      $sql = "SELECT T.id, T.type, T.group, T.name, T.url, "
+        . "T.km, T.asc, T.dsc, T.latitude, T.longitude, T.date, U.name As pseudo "
+        . "FROM " . $DB->table("trace") . " As T, "
+        . $DB->table("user"). " As U "
+        . "WHERE T.user = U.id "
+        . "AND T.public=1 AND T.official=0 "
+        . "AND T.user<>$user "
+        . "ORDER BY T.group, T.name";
+    }
+    else if ($mode == 'official') {
+      $sql = "SELECT T.id, T.type, T.group, T.name, T.url, "
+        . "T.km, T.asc, T.dsc, T.latitude, T.longitude, T.date, '' As pseudo "
+        . "FROM " . $DB->table("trace") . " As T "
+        . "WHERE T.public=1 "
+        . "AND T.official=0 "
+        . "AND T.user<>$user "
+        . "ORDER BY T.group, T.name";
+    }
+    else if ($mode == 'official') {
+      $sql = "SELECT T.id, T.type, T.group, T.name, T.url, "
+        . "T.km, T.asc, T.dsc, T.latitude, T.longitude, T.date, '' As pseudo "
+        . "FROM " . $DB->table("trace") . " As T "
+        . "WHERE T.user=$user "
+        . "ORDER BY T.group, T.name";
+    }
+    echo "SQL = $sql<br/>\n";
+    $stm = $DB->query($sql);
+    $fd = null;
+    $type = "";
+    $data = Array();
+    $groups = Array();
+    while( $row = $stm->fetch() ) {
+      $groups[] = $row["group"];
+      //echo $row["id"] . " : " . $row["group"] . " / " . $row["name"] . "\n";
+      if (!isset($data[$row["group"]])) {
+        $data[$row["group"]] = Array();
+      }
+      $data[$row["group"]][] =
+         Array("I" => intval($row["id"]),
+               "N" => $row["name"],
+               "U" => $row["url"],
+               "T" => $row["type"],
+               "#" => $row["date"],
+               "K" => floatval($row["km"]),
+               "A" => floatval($row["asc"]),
+               "D" => floatval($row["dsc"]),
+               "Y" => floatval($row["latitude"]),
+               "X" => floatval($row["longitude"]),
+               "P" => $row["pseudo"]);
+    }
+    $result[$mode] = $data;
+  }
+  return $result;
+}
+
+?>

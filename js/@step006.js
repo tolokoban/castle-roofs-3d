@@ -59,8 +59,7 @@ addListener(
     function() {
         document.body.parentNode.$data = {};
         // Attach controllers.
-        try{require('x-widget')('step00510','step005',{"width":"320","height":"320","castle":"0"})}catch(x){console.error('Unable to initialize step005!', x)}
-try{require('x-widget')('step00611','step006',{"width":"320","height":"320","castle":"0"})}catch(x){console.error('Unable to initialize step006!', x)}
+        try{require('x-widget')('step0064','step006',{"width":"640","height":"640","castle":"1","cameraX":"14","cameraY":"9"})}catch(x){console.error('Unable to initialize step006!', x)}
     }
 );
 // File:src/Three.js

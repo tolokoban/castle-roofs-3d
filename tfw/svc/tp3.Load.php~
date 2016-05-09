@@ -1,0 +1,46 @@
+<?php
+$ROLE = "";
+
+/**
+ * Retour :
+ *   -1 : id inexistant.
+ *   -2 : erreur dans la requête.
+ */
+function execService($id) {
+  global $DB;
+
+  $file = new File("pri", "trace");
+  $data = $file->load($id);
+  if ($data == null) return -1;
+
+  $stm = $DB->query("SELECT `group`, `public`, `official`, `user`, `view`"
+                    . " FROM " . $DB->table("trace")
+                    . " WHERE id=?",
+                    $id);
+  if (!$stm) {
+    return -2;
+  }
+  $row = $stm->fetch();
+  if (!$row) {
+    return -1;
+  }
+  $trace = json_decode($data, true);
+  $trace["grp"] = $row[0];
+  $trace["public"] = intVal($row[1]);
+  $trace["official"] = intVal($row[2]);
+  $trace["usr"] = intVal($row[3]);
+  $trace["id"] = intVal($id);
+  $trace["view"] = intVal($row[4]);
+  if ($row[3] != userId() && !hasRole("ADMIN")) {
+    // Pour éviter qu'un utilisateur duplique une trace
+    // en embarquant le flag "official".
+    $trace["official"] = 0;
+    $DB->query("UPDATE " . $DB->table("trace")
+               . " SET view = view + 1"
+               . " WHERE id=?",
+               $id);
+    $trace["view"]++;
+  }
+  return $trace;
+}
+?>

@@ -1,0 +1,62 @@
+<?php
+$ROLE = "";
+
+/**
+ * Paramètre : code de la course.
+ * Retour :
+ * [
+ *   {idx: 150, dis: 15, txt: "Col des Autruches"},
+ *   {idx: 548, dis: 28, txt: "Passage des Goelands"},
+ *   ...
+ * ]
+ * 
+ *  -1 : Problème SQL.
+ *  -2 : Le code n'existe pas.
+ *  -3 : fichier de la trace manquant.
+ */
+function execService($code) {
+  global $DB;
+
+  $stm = $DB->query("SELECT trace FROM " . $DB->table("race")
+                   . " WHERE code=?",
+                   $code);
+  if (!$stm) {
+    return -1;
+  }
+  $row = $stm->fetch();
+  if (!$row) {
+    return -2;
+  }
+  print_r($row);
+
+  $id = $row[0];
+  
+  $file = new File("pri", "trace");
+  $data = $file->load($id);
+  if ($data == null) return -3;
+  $trace = json_decode($data, true);
+  
+  $output = Array();
+  if (isset($trace["text"])) {
+    $markers = $trace["text"];
+    $start = $trace["dis"][0];
+    foreach ($markers as $mrk) {
+      $row = Array("idx" => $mrk["idx"],
+                   "txt" => $mrk["txt"],
+                   "dis" => floor(0.5 + ($trace["dis"][$mrk["idx"]] - $start) / 1000));
+      $output[] = $row;
+    }
+  }
+  usort($output, "cmp");
+  return $output;
+}
+
+
+function cmp($a, $b) {
+  $dA = $a["dis"];
+  $dB = $b["dis"];
+  if ($dA == $dB) return 0;
+  if ($dA < $dB) return -1;
+  return 1;
+}
+?>

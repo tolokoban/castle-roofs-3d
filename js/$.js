@@ -2,11 +2,11 @@ require( '$', function(exports, module) {  exports.config={
     name:"castle-roofs-3d",
     description:"Tutorial: making a simple 3D game",
     author:"tolokoban",
-    version:"0.0.1",
+    version:"0.0.2",
     major:0,
     minor:0,
-    revision:1,
-    date:new Date(2016,4,4,9,28,58)
+    revision:2,
+    date:new Date(2016,4,8,18,9,45)
 };
 var currentLang = null;
 exports.lang = function(lang) {
