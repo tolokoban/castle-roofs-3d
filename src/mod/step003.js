@@ -36,7 +36,7 @@ var Step003 = function( args ) {
         // Do not create boxes of height lesser than 1.
         if( h < 1 ) return;
         var col = idx % castle.cols;
-        var row = (idx - col) / castle.rows;
+        var row = (idx - col) / castle.cols;
         mesh.addQuad({
             pos: [col - castle.cols / 2, h, row - castle.rows / 2],
             color: COLOR_GREEN,

@@ -58,8 +58,8 @@ var Canvas = function(options) {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera( 45, this.W / this.H, 0.1, 1000 );
     this.camera.position.z = 1.4;
-    this.renderer = new THREE.WebGLRenderer({ alpha: true });
-    this.renderer.setClearColor( 0xffffff, 0);
+    this.renderer = new THREE.WebGLRenderer({ alpha: false });
+    this.renderer.setClearColor( 0x333333, 0);
     this.renderer.setSize( this.W, this.H );
     element.appendChild( this.renderer.domElement );
     this._time = 0;
@@ -69,11 +69,12 @@ var Canvas = function(options) {
  * @return void
  */
 Canvas.prototype.setCamera = function( x, y, z, lookAtX, lookAtY, lookAtZ ) {
-    this.camera.position.x = x;
-    this.camera.position.y = y;
-    this.camera.position.z = z;
+    this.camera.position.x = parseFloat( x );
+    this.camera.position.y = parseFloat( y );
+    this.camera.position.z = parseFloat( z );
     if( typeof lookAtX === 'number') {
-        this.camera.lookAt( new THREE.Vector3( lookAtX, lookAtY, lookAtZ ) );
+        this.camera.lookAt( new THREE.Vector3(
+            parseFloat( lookAtX ), parseFloat( lookAtY ), parseFloat( lookAtZ ) ) );
     }
 };
 
@@ -167,9 +168,9 @@ Canvas.prototype.createMesh = function(opt) {
                     cache.push( key );
                     line = new THREE.Geometry();
                     line.vertices.push(
-                        new THREE.Vector3( 
+                        new THREE.Vector3(
                             opt.vertices[a][0], opt.vertices[a][1], opt.vertices[a][2] ),
-                        new THREE.Vector3( 
+                        new THREE.Vector3(
                             opt.vertices[b][0], opt.vertices[b][1], opt.vertices[b][2] )
                     );
                     line.type = THREE.Lines;

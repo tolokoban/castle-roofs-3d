@@ -1,0 +1,2 @@
+require("controls",function(e,o){e.forward=!1,e.right=!1,e.left=!1,e.fire=!1,e.jump=!1;var n={38:"forward",39:"right",37:"left",32:"fire"};window.addEventListener("keyup",function(o){var t=n[""+o.keyCode];t&&(o.preventDefault(),o.stopPropagation(),e[t]=!1)},!0),window.addEventListener("keydown",function(o){var t=n[""+o.keyCode];t&&(o.preventDefault(),o.stopPropagation(),console.info("[controls] action=...",t),e[t]=!0)},!0)});
+//# sourceMappingURL=controls.js.map
