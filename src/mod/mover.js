@@ -14,7 +14,7 @@ var DIRS = [ [1,0], [0,1], [-1,0], [0,-1] ];
 function Mover( args ) {
     if( typeof args === 'undefined' ) args = {};
     if( typeof args.durTranslate === 'undefined' ) args.durTranslate = 500;
-    if( typeof args.durRotate === 'undefined' ) args.durRotate = 200;;
+    if( typeof args.durRotate === 'undefined' ) args.durRotate = 700;
     if( typeof args.col === 'undefined' ) args.col = 0;
     if( typeof args.row === 'undefined' ) args.row = 0;
 

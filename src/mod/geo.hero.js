@@ -8,7 +8,7 @@ var Geo = require("geo");
 
 var Hero = function() {
     Geo.call( this );
-
+/*
     var orange = new THREE.Color( 0xff9900 );
     var steps = 60, height = 1, radius = .3;
     var i, ang1, ang2, r1, r2;
@@ -35,6 +35,7 @@ var Hero = function() {
             ]
         });
     }
+*/
 };
 
 

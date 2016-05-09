@@ -11,8 +11,16 @@ function Follower( args ) {
     this._x = this._z = 0;
     this._y = 20;
     this._time = 0;
+    this._looks = [
+        subjective.bind( this )
+    ];
 }
 
+var DIRS = [[-1,0], [0,-1], [1,0], [0,1]];
+
+function subjective( time1 ) {
+
+}
 
 /**
  * @return void
@@ -24,7 +32,13 @@ Follower.prototype.look = function( time1 ) {
     var newPos = this._args.mesh.position;
     var angle = this._args.mesh.rotation.y;    
     var time0 = this._time;
-    var maxFar = 5;
+    var maxDist = 5;
+    var orientation;
+    var bestOrientation;
+    var bestDist;
+    var bestHeight;
+    var bestCol, bestRow;
+
     var dist;
     var col, row;
     var vx, vy, vz;
@@ -36,44 +50,55 @@ Follower.prototype.look = function( time1 ) {
         col = castle.x2col( newPos.x );
         row = castle.z2row( newPos.z );
         var currentHeight = castle.getHeight( col, row );
+        // Finding orientation. This will be a number between 0 and 3.
+        bestDist = 0;
+        bestHeight = currentHeight;
+        orientation = Math.floor( angle + Math.PI / 8 ) % 4;
+        if( orientation < 0 ) orientation += 4;
+        [
+            orientation,
+            (orientation + 1) % 4,
+            (orientation + 3) % 4,
+            (orientation + 2) % 4,
+        ].forEach(function( orient ) {
+            var col2 = col, row2 = row;
+            var dir = DIRS[orient];
+//if( typeof dir === 'undefined' ) debugger;
+
+            var height;
+            var lastHeight = currentHeight;
+            for( var dist = 1 ; dist < maxDist ; dist++ ) {
+                col2 += dir[0];
+                row2 += dir[1];
+                height = Math.max( lastHeight, castle.getHeight( col2, row2 ) );
+                if( Math.abs( height - lastHeight ) > .33 ) break;
+                lastHeight = height;
+                if( dist > bestDist ) {
+                    bestDist = dist;
+                    bestHeight = height;
+                    bestCol = col2;
+                    bestRow = row2;
+                }
+            }
+        });
+
+        var targetX = castle.col2x( bestCol );
+        var targetY = bestHeight + 1.5;
+        var targetZ = castle.row2z( bestRow );
+
         var time = time1 - time0;
         var shift = .1 * Math.cos( time1 * .0007 );
-        var targetX = newPos.x - maxFar * Math.cos( angle );
-        var targetZ = newPos.z + maxFar * Math.sin( angle );
-        col = castle.z2row( targetX );
-        row = castle.x2col( targetZ );
-        var targetY = Math.max( currentHeight - .4, castle.getHeight( col, row ) );
-        bestSlope = targetY - currentHeight;
-        dist = maxFar;
-        for( k = maxFar - 1 ; k > 0 ; k-- ) {
-            x = newPos.x - k * Math.cos( angle );
-            z = newPos.z + k * Math.sin( angle );
-            col = castle.x2col( x );
-            row = castle.z2row( z );
-            h = castle.getHeight( col, row );
-            if( h == 0 ) h = currentHeight;
-            slope = (h - currentHeight) / k;
-            if( slope > bestSlope ) {
-                // There is a better spot for the camera.
-                dist = k;
-                bestSlope = slope;
-                targetX = x;
-                targetZ = z;
-                targetY = h;
-            }
-        }
 
-        dist -= .8;
-        targetX = newPos.x - dist * Math.cos( angle + shift );
-        targetZ = newPos.z + dist * Math.sin( angle + shift );
-        targetY += 1.5;  //.2 * dist;
+        targetX = newPos.x;
+        targetY = newPos.y + .8;
+        targetZ = newPos.z;
+
+        // Let's go to the target.
         vx = targetX - camera.position.x;
         vy = targetY - camera.position.y;
         vz = targetZ - camera.position.z;
         r = Math.sqrt( vx * vx + vy * vy + vz * vz );
 
-        if( isNaN( r ) ) debugger;
-        
         if( r < time * speed ) {
             camera.position.x = targetX;
             camera.position.y = targetY;
@@ -87,7 +112,12 @@ Follower.prototype.look = function( time1 ) {
     }
     this._time = time1;
    
-    camera.lookAt( new THREE.Vector3( newPos.x, newPos.y + 1, newPos.z ) );    
+    camera.position = new THREE.Vector3( newPos.x, newPos.y + .8, newPos.z );
+    camera.lookAt( new THREE.Vector3( 
+        newPos.x - Math.sin( angle - Math.PI / 2 ), 
+        newPos.y + .8, 
+        newPos.z - Math.cos( angle - Math.PI / 2 )
+    ) );    
 };
 
 
