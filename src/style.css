@@ -18,6 +18,20 @@ body {
     box-shadow: 0 0 1px 1px #000;
 }
 
+@media (max-width: 640px) {
+  body {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: .5rem;
+    background: #eee;
+    left: 0;
+    top: 0;
+    box-shadow: none;
+  }
+}
+
 h1, h2, h3 {
     font-variant: small-caps;
     color: #063;
